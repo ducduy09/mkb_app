@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mkb_technology/helper/task_helper.dart';
 import 'package:mkb_technology/helper/users.dart';
@@ -19,6 +20,7 @@ class DragAndDropExample extends StatefulWidget {
 class _DragAndDropExampleState extends State<DragAndDropExample> {
   String draggableData = 'OBJ';
   bool accepted = false;
+  late FToast fToast;
   late SharedPreferences pref;
   UserLogin? user;
   int adminId = 0;
@@ -75,7 +77,7 @@ class _DragAndDropExampleState extends State<DragAndDropExample> {
       List<Map<String, dynamic>> data =
           await TaskHelper.checkTaskId(taskId, userId);
       if (data.isEmpty) {
-        // await TaskHelper.insertTaskNow(taskId, userId, taskName, content);
+        await TaskHelper.insertTaskNow(taskId, userId, taskName, content);
         var notify = const SnackBar(
           content: Text("Completed !!!"),
           duration: Duration(seconds: 3),
@@ -83,12 +85,14 @@ class _DragAndDropExampleState extends State<DragAndDropExample> {
         // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(notify);
       } else {
-        var notify = const SnackBar(
-          content: Text("This user already exists in the task !!!"),
-          duration: Duration(seconds: 3),
+        fToast.showToast(
+          child: const Text(
+            "This user already exists in the task !!!",
+            style: TextStyle(color: Colors.black),
+          ),
+          gravity: ToastGravity.BOTTOM,
+          toastDuration: const Duration(seconds: 2),
         );
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(notify);
       }
     } catch (e) {
       print(e);
@@ -104,6 +108,8 @@ class _DragAndDropExampleState extends State<DragAndDropExample> {
           });
       getListUser();
     });
+    fToast = FToast();
+    fToast.init(context);
     super.initState();
   }
 
@@ -191,65 +197,58 @@ class _DragAndDropExampleState extends State<DragAndDropExample> {
             child: ListView.builder(
               itemCount: dataList.length,
               itemBuilder: (BuildContext context, int i) {
-                return SizedBox(
-                  child: Column(
-                    children: [
-                      Text(
-                        "Task ${i + 1}",
-                        style: TextStyle(color: Colors.amber),
-                      ),
-                      DragTarget(
-                        builder: (BuildContext context,
-                            List<dynamic> candidateData,
-                            List<dynamic> rejectedData) {
-                          return Card(
-                            color: const Color.fromARGB(255, 209, 162, 9),
-                            elevation: 8,
-                            child: ListTile(
-                              title: Text(
-                                dataList[i]['taskName'],
-                                style: GoogleFonts.montserrat(),
-                              ),
-                              subtitle: Text(
-                                "${dataList[i]['content']}",
-                                // style: greyTExt,
-                              ),
-                              trailing: Icon(
-                                Icons.keyboard_arrow_right,
-                                color: Colors.green.shade800,
-                              ),
-                              onTap: () {
-                                String text = dataList[i]['taskId'];
-                                text = text.substring(0, text.indexOf("."));
-                                print(text);
-                                getTaskName(text).then((value) =>
-                                    {print(taskList[0]["taskName"])
-                                  });
-                              },
-                            ),
-                          );
-                        },
-                        onWillAccept: (data) {
-                          return data != null;
-                        },
-                        onAccept: (data) {
-                          setState(() {
-                            accepted = true;
-                            // Map<String, dynamic> a = data as Map<String, dynamic>; // cách này là dùng nên cẩn thận vì nếu sai có thể sinh
-                            // print(a["userId"]);  // ra ngoại lệ và nên sử dụng cách bên dưới để kiểm tra thì hay hơn
-                            if (data is Map<String, dynamic>) {
-                              var userId = data['userId'];
-                              addUserToTask(
-                                  dataList[i]["taskId"],
-                                  userId,
-                                  dataList[i]["taskName"],
-                                  dataList[i]["content"]);
-                            }
-                          });
+                return DragTarget(
+                  builder: (BuildContext context, List<dynamic> candidateData,
+                      List<dynamic> rejectedData) {
+                    return Card(
+                      color: const Color.fromARGB(255, 209, 162, 9),
+                      elevation: 8,
+                      child: ListTile(
+                        title: Text(
+                          dataList[i]['taskName'],
+                          style: GoogleFonts.montserrat(),
+                        ),
+                        subtitle: Text(
+                          "${dataList[i]['content']}",
+                          // style: greyTExt,
+                        ),
+                        trailing: Icon(
+                          Icons.keyboard_arrow_right,
+                          color: Colors.green.shade800,
+                        ),
+                        onTap: () {
+                          String text = dataList[i]['taskId'];
+                          text = text.substring(0, text.indexOf("."));
+                          print(text);
+                          getTaskName(text).then((value) => {
+                                fToast.showToast(
+                                  child: Text(
+                                    "Task Name: ${taskList[0]['taskName']}",
+                                    style: TextStyle(color: Colors.black),
+                                  ),
+                                  gravity: ToastGravity.BOTTOM,
+                                  toastDuration: const Duration(seconds: 2),
+                                )
+                              });
                         },
                       ),
-                    ],
-                  ),
+                    );
+                  },
+                  onWillAccept: (data) {
+                    return data != null;
+                  },
+                  onAccept: (data) {
+                    setState(() {
+                      accepted = true;
+                      // Map<String, dynamic> a = data as Map<String, dynamic>; // cách này là dùng nên cẩn thận vì nếu sai có thể sinh
+                      // print(a["userId"]);  // ra ngoại lệ và nên sử dụng cách bên dưới để kiểm tra thì hay hơn
+                      if (data is Map<String, dynamic>) {
+                        var userId = data['userId'];
+                        addUserToTask(dataList[i]["taskId"], userId,
+                            dataList[i]["taskName"], dataList[i]["content"]);
+                      }
+                    });
+                  },
                 );
               },
             ),

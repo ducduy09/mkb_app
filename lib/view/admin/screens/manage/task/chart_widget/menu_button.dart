@@ -46,7 +46,7 @@ class _MenuButtonsState extends State<MenuButtons> {
                   hoverColor: Colors.blue[700],
                   onPressed: () {
                     // Xử lý khi ấn vào nút
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ExampleDragAndDrop(),));
+                    Navigator.push(context, MaterialPageRoute(builder: (context) =>  DragAndDropExample(),));
                   },
                   color: Colors.white, // Đặt màu cho biểu tượng
                 ),
