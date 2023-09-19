@@ -1,412 +1,261 @@
+// ignore_for_file:library_private_types_in_public_api, avoid_print
+
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:mkb_technology/helper/task_helper.dart';
+import 'package:mkb_technology/helper/users.dart';
+import 'package:mkb_technology/models/user_login.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(
-    const MaterialApp(
-      home: ExampleDragAndDrop(),
-      debugShowCheckedModeBanner: false,
-    ),
-  );
-}
-
-const List<Item> _items = [
-  Item(
-    name: 'Spinach Pizza',
-    totalPriceCents: 1299,
-    uid: '1',
-    imageProvider: NetworkImage('https://flutter'
-        '.dev/docs/cookbook/img-files/effects/split-check/Food1.jpg'),
-  ),
-  Item(
-    name: 'Veggie Delight',
-    totalPriceCents: 799,
-    uid: '2',
-    imageProvider: NetworkImage('https://flutter'
-        '.dev/docs/cookbook/img-files/effects/split-check/Food2.jpg'),
-  ),
-  Item(
-    name: 'Chicken Parmesan',
-    totalPriceCents: 1499,
-    uid: '3',
-    imageProvider: NetworkImage('https://flutter'
-        '.dev/docs/cookbook/img-files/effects/split-check/Food3.jpg'),
-  ),
-];
-
-@immutable
-class ExampleDragAndDrop extends StatefulWidget {
-  const ExampleDragAndDrop({super.key});
+class DragAndDropExample extends StatefulWidget {
+  const DragAndDropExample({super.key});
 
   @override
-  State<ExampleDragAndDrop> createState() => _ExampleDragAndDropState();
+  _DragAndDropExampleState createState() => _DragAndDropExampleState();
 }
 
-class _ExampleDragAndDropState extends State<ExampleDragAndDrop>
-    with TickerProviderStateMixin {
-  final List<Customer> _people = [
-    Customer(
-      name: 'Makayla',
-      imageProvider: const NetworkImage('https://flutter'
-          '.dev/docs/cookbook/img-files/effects/split-check/Avatar1.jpg'),
-    ),
-    Customer(
-      name: 'Nathan',
-      imageProvider: const NetworkImage('https://flutter'
-          '.dev/docs/cookbook/img-files/effects/split-check/Avatar2.jpg'),
-    ),
-    Customer(
-      name: 'Emilio',
-      imageProvider: const NetworkImage('https://flutter'
-          '.dev/docs/cookbook/img-files/effects/split-check/Avatar3.jpg'),
-    ),
-  ];
+class _DragAndDropExampleState extends State<DragAndDropExample> {
+  String draggableData = 'OBJ';
+  bool accepted = false;
+  late SharedPreferences pref;
+  UserLogin? user;
+  int adminId = 0;
 
-  final GlobalKey _draggableKey = GlobalKey();
+  List<Map<String, dynamic>> taskList = [];
+  // List<Map<String, dynamic>> taskListData = [];
+  List<Map<String, dynamic>> dataList = [];
+  List<Map<String, dynamic>> userList = [];
 
-  void _itemDroppedOnCustomerCart({
-    required Item item,
-    required Customer customer,
-  }) {
+  Future<void> getListTask(int id) async {
+    List<Map<String, dynamic>> list = await TaskHelper.getListTask(id);
     setState(() {
-      customer.items.add(item);
+      taskList = list;
     });
+  }
+
+  Future<void> getTaskName(String id) async {
+    List<Map<String, dynamic>> list = await TaskHelper.checkTaskId(id, adminId);
+    setState(() {
+      taskList = list;
+    });
+  }
+
+  Future<void> getListTaskID(int id, String idtask) async {
+    List<Map<String, dynamic>> list = await TaskHelper.getTaskById(id, idtask);
+    setState(() {
+      dataList.addAll(list);
+    });
+    print(dataList);
+  }
+
+  Future<int> getIdAdmin() async {
+    pref = await SharedPreferences.getInstance();
+    String? userData = pref.getString("userData");
+    setState(() {
+      if (userData != null) {
+        user = UserLogin.fromMap(jsonDecode(userData));
+      }
+    });
+    adminId = user!.userId;
+    return adminId;
+  }
+
+  void getListUser() async {
+    List<Map<String, dynamic>> list = await UserHelper.getDataByType("Admin");
+    setState(() {
+      userList = list;
+    });
+  }
+
+  void addUserToTask(
+      String taskId, int userId, String taskName, String content) async {
+    try {
+      List<Map<String, dynamic>> data =
+          await TaskHelper.checkTaskId(taskId, userId);
+      if (data.isEmpty) {
+        // await TaskHelper.insertTaskNow(taskId, userId, taskName, content);
+        var notify = const SnackBar(
+          content: Text("Completed !!!"),
+          duration: Duration(seconds: 3),
+        );
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(notify);
+      } else {
+        var notify = const SnackBar(
+          content: Text("This user already exists in the task !!!"),
+          duration: Duration(seconds: 3),
+        );
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(notify);
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  @override
+  void initState() {
+    getIdAdmin().then((value) {
+      getListTask(adminId).then((value) => {
+            for (int i = 0; i < taskList.length; i++)
+              {getListTaskID(adminId, taskList[i]["taskId"])}
+          });
+      getListUser();
+    });
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7F7),
-      appBar: _buildAppBar(),
-      body: _buildContent(),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      iconTheme: const IconThemeData(color: Color(0xFFF64209)),
-      title: Text(
-        'Order Food',
-        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontSize: 36,
-              color: const Color(0xFFF64209),
-              fontWeight: FontWeight.bold,
-            ),
-      ),
-      backgroundColor: const Color(0xFFF7F7F7),
-      elevation: 0,
-    );
-  }
-
-  Widget _buildContent() {
-    return Stack(
-      children: [
-        SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: _buildMenuList(),
-              ),
-              _buildPeopleRow(),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMenuList() {
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: _items.length,
-      separatorBuilder: (context, index) {
-        return const SizedBox(
-          height: 12,
-        );
-      },
-      itemBuilder: (context, index) {
-        final item = _items[index];
-        return _buildMenuItem(
-          item: item,
-        );
-      },
-    );
-  }
-
-  Widget _buildMenuItem({
-    required Item item,
-  }) {
-    return LongPressDraggable<Item>(
-      data: item,
-      dragAnchorStrategy: pointerDragAnchorStrategy,
-      feedback: DraggingListItem(
-        dragKey: _draggableKey,
-        photoProvider: item.imageProvider,
-      ),
-      child: MenuListItem(
-        name: item.name,
-        price: item.formattedTotalItemPrice,
-        photoProvider: item.imageProvider,
-      ),
-    );
-  }
-
-  Widget _buildPeopleRow() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 20,
-      ),
-      child: Row(
-        children: _people.map(_buildPersonWithDropZone).toList(),
-      ),
-    );
-  }
-
-  Widget _buildPersonWithDropZone(Customer customer) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 6,
-        ),
-        child: DragTarget<Item>(
-          builder: (context, candidateItems, rejectedItems) {
-            return CustomerCart(
-              hasItems: customer.items.isNotEmpty,
-              highlighted: candidateItems.isNotEmpty,
-              customer: customer,
-            );
+      backgroundColor: Colors.amber[100],
+      appBar: AppBar(
+        backgroundColor: Colors.blue,
+        title: const Text("Manager Task"),
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
           },
-          onAccept: (item) {
-            _itemDroppedOnCustomerCart(
-              item: item,
-              customer: customer,
-            );
-          },
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Color.fromARGB(255, 255, 255, 255),
+          ),
         ),
       ),
-    );
-  }
-}
-
-class CustomerCart extends StatelessWidget {
-  const CustomerCart({
-    super.key,
-    required this.customer,
-    this.highlighted = false,
-    this.hasItems = false,
-  });
-
-  final Customer customer;
-  final bool highlighted;
-  final bool hasItems;
-
-  @override
-  Widget build(BuildContext context) {
-    final textColor = highlighted ? Colors.white : Colors.black;
-
-    return Transform.scale(
-      scale: highlighted ? 1.075 : 1.0,
-      child: Material(
-        elevation: highlighted ? 8 : 4,
-        borderRadius: BorderRadius.circular(22),
-        color: highlighted ? const Color(0xFFF64209) : Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ClipOval(
-                child: SizedBox(
-                  width: 46,
-                  height: 46,
-                  child: Image(
-                    image: customer.imageProvider,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                customer.name,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: textColor,
-                      fontWeight:
-                          hasItems ? FontWeight.normal : FontWeight.bold,
-                    ),
-              ),
-              Visibility(
-                visible: hasItems,
-                maintainState: true,
-                maintainAnimation: true,
-                maintainSize: true,
-                child: Column(
-                  children: [
-                    const SizedBox(height: 4),
-                    Text(
-                      customer.formattedTotalItemPrice,
-                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                            color: textColor,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+      body: Row(
+        children: [
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: userList.length,
+                    itemBuilder: (BuildContext context, int i) {
+                      return Draggable(
+                          data: userList[i],
+                          feedback: SizedBox(
+                            width: 300,
+                            height: 80,
+                            child: Card(
+                              color: const Color.fromARGB(255, 209, 162, 9),
+                              elevation: 8,
+                              child: ListTile(
+                                title: Text(
+                                  "Admin ${i + 1}",
+                                  style: GoogleFonts.montserrat(),
+                                ),
+                                subtitle: Text(
+                                  userList[i]['userName'],
+                                  // style: greyTExt,
+                                ),
+                                trailing: Icon(
+                                  Icons.keyboard_arrow_right,
+                                  color: Colors.green.shade800,
+                                ),
+                                onTap: () {},
+                              ),
+                            ),
                           ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${customer.items.length} item${customer.items.length != 1 ? 's' : ''}',
-                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                            color: textColor,
-                            fontSize: 12,
-                          ),
-                    ),
-                  ],
-                ),
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class MenuListItem extends StatelessWidget {
-  const MenuListItem({
-    super.key,
-    this.name = '',
-    this.price = '',
-    required this.photoProvider,
-    this.isDepressed = false,
-  });
-
-  final String name;
-  final String price;
-  final ImageProvider photoProvider;
-  final bool isDepressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      elevation: 12,
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: SizedBox(
-                width: 120,
-                height: 120,
-                child: Center(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
-                    curve: Curves.easeInOut,
-                    height: isDepressed ? 115 : 120,
-                    width: isDepressed ? 115 : 120,
-                    child: Image(
-                      image: photoProvider,
-                      fit: BoxFit.cover,
-                    ),
+                          childWhenDragging: const SizedBox(),
+                          child: SizedBox(
+                            width: 300,
+                            height: 80,
+                            child: Card(
+                              color: const Color.fromARGB(255, 209, 162, 9),
+                              elevation: 8,
+                              child: ListTile(
+                                title: Text(
+                                  "Admin ${i + 1}",
+                                  style: GoogleFonts.montserrat(),
+                                ),
+                                subtitle: Text(
+                                  userList[i]['userName'],
+                                ),
+                                trailing: Icon(
+                                  Icons.keyboard_arrow_right,
+                                  color: Colors.green.shade800,
+                                ),
+                                onTap: () {},
+                              ),
+                            ),
+                          ));
+                    },
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(width: 30),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 18,
-                        ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    price,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class DraggingListItem extends StatelessWidget {
-  const DraggingListItem({
-    super.key,
-    required this.dragKey,
-    required this.photoProvider,
-  });
-
-  final GlobalKey dragKey;
-  final ImageProvider photoProvider;
-
-  @override
-  Widget build(BuildContext context) {
-    return FractionalTranslation(
-      translation: const Offset(-0.5, -0.5),
-      child: ClipRRect(
-        key: dragKey,
-        borderRadius: BorderRadius.circular(12),
-        child: SizedBox(
-          height: 150,
-          width: 150,
-          child: Opacity(
-            opacity: 0.85,
-            child: Image(
-              image: photoProvider,
-              fit: BoxFit.cover,
+              ],
             ),
           ),
-        ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: dataList.length,
+              itemBuilder: (BuildContext context, int i) {
+                return SizedBox(
+                  child: Column(
+                    children: [
+                      Text(
+                        "Task ${i + 1}",
+                        style: TextStyle(color: Colors.amber),
+                      ),
+                      DragTarget(
+                        builder: (BuildContext context,
+                            List<dynamic> candidateData,
+                            List<dynamic> rejectedData) {
+                          return Card(
+                            color: const Color.fromARGB(255, 209, 162, 9),
+                            elevation: 8,
+                            child: ListTile(
+                              title: Text(
+                                dataList[i]['taskName'],
+                                style: GoogleFonts.montserrat(),
+                              ),
+                              subtitle: Text(
+                                "${dataList[i]['content']}",
+                                // style: greyTExt,
+                              ),
+                              trailing: Icon(
+                                Icons.keyboard_arrow_right,
+                                color: Colors.green.shade800,
+                              ),
+                              onTap: () {
+                                String text = dataList[i]['taskId'];
+                                text = text.substring(0, text.indexOf("."));
+                                print(text);
+                                getTaskName(text).then((value) =>
+                                    {print(taskList[0]["taskName"])
+                                  });
+                              },
+                            ),
+                          );
+                        },
+                        onWillAccept: (data) {
+                          return data != null;
+                        },
+                        onAccept: (data) {
+                          setState(() {
+                            accepted = true;
+                            // Map<String, dynamic> a = data as Map<String, dynamic>; // cách này là dùng nên cẩn thận vì nếu sai có thể sinh
+                            // print(a["userId"]);  // ra ngoại lệ và nên sử dụng cách bên dưới để kiểm tra thì hay hơn
+                            if (data is Map<String, dynamic>) {
+                              var userId = data['userId'];
+                              addUserToTask(
+                                  dataList[i]["taskId"],
+                                  userId,
+                                  dataList[i]["taskName"],
+                                  dataList[i]["content"]);
+                            }
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
-  }
-}
-
-@immutable
-class Item {
-  const Item({
-    required this.totalPriceCents,
-    required this.name,
-    required this.uid,
-    required this.imageProvider,
-  });
-  final int totalPriceCents;
-  final String name;
-  final String uid;
-  final ImageProvider imageProvider;
-  String get formattedTotalItemPrice =>
-      '\$${(totalPriceCents / 100.0).toStringAsFixed(2)}';
-}
-
-class Customer {
-  Customer({
-    required this.name,
-    required this.imageProvider,
-    List<Item>? items,
-  }) : items = items ?? [];
-
-  final String name;
-  final ImageProvider imageProvider;
-  final List<Item> items;
-
-  String get formattedTotalItemPrice {
-    final totalPriceCents =
-        items.fold<int>(0, (prev, item) => prev + item.totalPriceCents);
-    return '\$${(totalPriceCents / 100.0).toStringAsFixed(2)}';
   }
 }
