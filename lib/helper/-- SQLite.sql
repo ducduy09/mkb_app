@@ -37,7 +37,7 @@ INSERT INTO tasks (taskId, userId, taskName, content, status) VALUES ("t2.1", "2
 INSERT INTO tasks (taskId, userId, taskName, content, status) VALUES ("t2.2", "2", "Hoạt động 1.2", "Xóa 1 sản phẩm mới lần 2",0);
 UPDATE tasks SET status = 1 WHERE taskId = 't2.1' and userId = 2
 Drop table tasks;
-delete from products where productId = 'prdA4'
+delete from tasks where taskId = 't2' and userId = 1
 delete from userLogin where userId = '3'
 SELECT * FROM tasks WHERE userId = '2' and taskId like 't%' and taskId not like 't%.%'
 select * from products

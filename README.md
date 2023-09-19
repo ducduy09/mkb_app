@@ -1,6 +1,6 @@
 # mkb_technology
 
-A new Flutter project.
+Flutter project MKB APP manage product, transition, user, slide, task,....
 
 ## Getting Started
 
