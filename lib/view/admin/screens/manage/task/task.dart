@@ -15,14 +15,14 @@ import 'source/app_resources.dart';
 import 'chart_widget/indicator.dart';
 import 'chart_widget/menu_button.dart';
 
-class TaskPieChart extends StatefulWidget {
-  const TaskPieChart({super.key});
+class ManageTask extends StatefulWidget {
+  const ManageTask({super.key});
 
   @override
-  State<StatefulWidget> createState() => PieChart2State();
+  State<StatefulWidget> createState() => ManageTaskState();
 }
 
-class PieChart2State extends State {
+class ManageTaskState extends State {
   late SharedPreferences pref;
   UserLogin? user;
   int adminId = 0;

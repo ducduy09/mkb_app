@@ -7,14 +7,12 @@ import 'package:mkb_technology/models/user_login.dart';
 import 'package:mkb_technology/view/admin/main.dart';
 import 'package:mkb_technology/view/admin/screens/manage/setting/setting.dart';
 import 'package:mkb_technology/view/admin/screens/manage/store/list_product.dart';
-import 'package:mkb_technology/view/admin/screens/manage/task/chart_example/bar_chart/bar_chart.dart';
 import 'package:mkb_technology/view/admin/screens/manage/transaction/list_transaction.dart';
 import 'package:mkb_technology/view/admin/screens/manage/user/list_user.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../manage/task/chart_example/line_chart/chart.dart';
 import '../../manage/task/task.dart';
 
 class SideMenu extends StatefulWidget {
@@ -114,7 +112,7 @@ class _SideMenuState extends State<SideMenu> {
             press: () {
               if (widget.isCase != 3) {
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => const TaskPieChart()));
+                    MaterialPageRoute(builder: (context) => const ManageTask()));
               }
             },
           ),
