@@ -85,9 +85,9 @@ class PieChart2State extends State {
     });
   }
 
-  void updateStatus(String taskID, int status) async {
+  void updateStatus(String taskID, int status, String date) async {
     try {
-      await TaskHelper.changeStatus(taskID, adminId, status);
+      await TaskHelper.changeStatus(taskID, adminId, status, date);
       print("update success");
     } catch (e) {
       print(e);
@@ -337,8 +337,8 @@ class PieChart2State extends State {
               ),
             if (tabNumber == 2)
               Expanded(
-                child: Container(
-                  child: ListView.builder(
+                  child: Container(
+                child: ListView.builder(
                     itemCount: taskList.length,
                     itemBuilder: (BuildContext context, int i) {
                       return Card(
@@ -397,11 +397,14 @@ class PieChart2State extends State {
                           value: _checked[tabChildNumber][index],
                           onChanged: (bool? value) {
                             setState(() {
+                              String date = DateTime.now().toString();
                               _checked[tabChildNumber][index] = value!;
                               print(_checked[tabChildNumber][index]);
                               _checked[tabChildNumber][index]
-                                  ? updateStatus(dataList[index]['taskId'], 1)
-                                  : updateStatus(dataList[index]['taskId'], 0);
+                                  ? updateStatus(
+                                      dataList[index]['taskId'], 1, date)
+                                  : updateStatus(
+                                      dataList[index]['taskId'], 0, "");
                             });
                           },
                         ),
