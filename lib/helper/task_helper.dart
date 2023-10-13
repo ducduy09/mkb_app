@@ -10,31 +10,28 @@ class TaskHelper {
   static String _tableName = "tasks";
   static Future<void> _createDatabase(Database db, int version) async {
     await db.execute(
-        'CREATE TABLE IF NOT EXISTS $_tableName(taskId text primary key, userId integer, taskName text, content text, createTime text default CURRENT_TIMESTAMP, completeTime text, status int default 0)');
+        'CREATE TABLE IF NOT EXISTS $_tableName(taskId text primary key, taskChildId text, taskChildName text, content text, createTime text default CURRENT_TIMESTAMP, completeTime text, status int default 0, primary key(taskId, taskChildId), FOREIGN KEY (taskId) REFERENCES tasks(taskId))');
   }
 
-  static Future<int> insertTaskNow(
-      String taskId, int userId, String taskName, String content) async {
+  static Future<int> insertTaskNow(String taskId, String taskChildId,
+      String taskName, String content) async {
     final db = await _openDatabase();
     final data = {
       'taskId': taskId,
-      'userId': userId,
+      'taskChildId': taskChildId,
       'taskName': taskName,
       'content': content,
-      // 'createTime': DateTime.now().toString(),
-      // 'completeTime': null,
       'status': 0
-      //'warehourseCode': code,
     };
     return await db.insert(_tableName, data);
   }
 
-  static Future<int> insertTask(String taskId, int userId, String taskName,
-      String content, String time) async {
+  static Future<int> insertTask(String taskId, String taskChildId,
+      String taskName, String content, String time) async {
     final db = await _openDatabase();
     final data = {
       'taskId': taskId,
-      'userId': userId,
+      'taskChildId': taskChildId,
       'taskName': taskName,
       'content': content,
       'createTime': time,
@@ -55,32 +52,39 @@ class TaskHelper {
     return openDatabase(path, version: 1, onCreate: _createDatabase);
   }
 
-  static Future<List<Map<String, dynamic>>> getTaskById(
-      int adId, String id) async {
+  // static Future<List<Map<String, dynamic>>> getTaskById(
+  //     String tbId, String id) async {
+  //   var dbClient = await _openDatabase();
+  //   var query = await dbClient.rawQuery(
+  //       "SELECT * FROM tasks WHERE taskChildId = '$id' and taskId = '$tbId'");
+  //   return query;
+  // }
+
+  static getListTask(String idtask) async {
     var dbClient = await _openDatabase();
-    var query = await dbClient.rawQuery(
-        "SELECT * FROM tasks WHERE userId = '$adId' and taskId LIKE '$id.%'");
+    var query = await dbClient
+        .rawQuery("SELECT * FROM $_tableName WHERE taskId = '$idtask'");
     return query;
   }
 
-  static getListTask(int userId) async {
-    var dbClient = await _openDatabase();
-    var query = await dbClient.rawQuery(
-        "SELECT * FROM $_tableName WHERE userId = '$userId' and taskId like 't%' and taskId not like 't%.%'");
-    return query;
-  }
-
-  static Future<void> changeStatus(String id, int userID, int status, String time) async {
+  static Future<void> changeStatus(
+      String id, String taskChildId, int status, String time) async {
     Database db = await _openDatabase();
     db.rawUpdate(
-        "UPDATE $_tableName SET status = $status, completeTime = '$time' WHERE taskId = '$id' and userId = $userID");
+        "UPDATE $_tableName SET status = $status, completeTime = '$time' WHERE taskId = '$id' and taskChildId = $taskChildId");
   }
 
-  static Future<List<Map<String, dynamic>>> checkTaskId(String id, int userID) async {
+  static checkTaskId(String id, String taskChildId) async {
     Database db = await _openDatabase();
     var query = await db.rawQuery(
-        "SELECT * FROM $_tableName WHERE taskId = '$id' and userId = $userID");
+        "SELECT * FROM $_tableName WHERE taskId = '$id' and taskChildId = $taskChildId");
     return query;
+  }
+
+  static Future<void> deleteTask(String id, String taskId) async {
+    Database db = await _openDatabase();
+    await db.rawDelete(
+        "DELETE FROM $_tableName WHERE taskId = '$id' and taskChildId = '$taskId'");
   }
   // static Future<List<Map<String, dynamic>>> searchProductRelative(
   //     String id) async {
@@ -94,13 +98,6 @@ class TaskHelper {
   //   var query = await dbClient.rawQuery(
   //       "SELECT productId FROM $_tableName ORDER BY productId LIMIT 1 ");
   //   return query.toString();
-  // }
-  // static Future<void> deleteProduct({String? id, String? name}) async {
-  //   Database db = await _openDatabase();
-  //   id != null
-  //       ? await db.rawDelete("DELETE FROM $_tableName WHERE productId = '$id' ")
-  //       : await db
-  //           .rawDelete("DELETE FROM $_tableName WHERE productName = '$name' ");
   // }
   // static Future<void> changeName(String id, String name) async {
   //   Database db = await _openDatabase();

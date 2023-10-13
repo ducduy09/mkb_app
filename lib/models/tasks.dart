@@ -2,40 +2,37 @@ import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'dart:core';
 
 class Tasks {
-  late String taskId;
-  late String taskName;
-  late int userId;
-  late String content;
+  late String taskId; 
+  late String taskChildId;
+  late String taskChildName;
+  late String? content;
   String? createTime = DateTime.now().toString();
   late String? completeTime;
   int status;
-  //final String warehourseCode;
   Tasks({
       required this.taskId, 
-      required this.userId, 
-      required this.taskName, 
-      required this.content, 
+      required this.taskChildId, 
+      required this.taskChildName, 
+      this.content, 
       this.createTime,
       this.completeTime,
       this.status = 0
-      //required this.warehourseCode,
   });
 
   Tasks.fromMap(Map<String, dynamic> res)
       : taskId = res["taskId"],
-        userId = res["userId"],
-        taskName = res["taskName"],
+        taskChildId = res["taskChildId"],
+        taskChildName = res["taskChildName"],
         content = res["content"],
         createTime = res["createTime"],
         completeTime = res["completeTime"],
         status = res["status"];
-      //  warehourseCode = res["warehourseCode"];
 
   Map<String, dynamic> toMap() {  
     return {  
       'taskId': taskId,  
-      'userId': userId,  
-      'taskName': taskName,
+      'taskChildId': taskChildId,  
+      'taskChildName': taskChildName,
       'content': content,  
       'createTime': createTime,
       'completeTime': completeTime,  
@@ -46,8 +43,8 @@ class Tasks {
   DataGridRow getDataGridRow() {
     return DataGridRow(cells: <DataGridCell>[
       DataGridCell<String>(columnName: 'taskId', value: taskId),
-      DataGridCell<int>(columnName: 'userId', value: userId),
-      DataGridCell<String>(columnName: 'taskName', value: taskName),
+      DataGridCell<String>(columnName: 'taskChildId', value: taskChildId),
+      DataGridCell<String>(columnName: 'taskChildName', value: taskChildName),
       DataGridCell<String>(columnName: 'content', value: content),
       DataGridCell<String>(columnName: 'createTime', value: createTime),
       DataGridCell<String>(columnName: 'completeTime', value: completeTime),

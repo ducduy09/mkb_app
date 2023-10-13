@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
+import 'package:mkb_technology/helper/index_task_helper.dart';
 import 'package:mkb_technology/helper/task_helper.dart';
 import 'package:mkb_technology/models/user_login.dart';
 import 'package:mkb_technology/view/admin/screens/main/components/side_menu.dart';
@@ -38,14 +39,15 @@ class ManageTaskState extends State {
   late List<List<bool>> _checked = [];
   List<Map<String, dynamic>> taskList = [];
   List<Map<String, dynamic>> dataList = [];
-  Future<void> getListTask(int id) async {
-    List<Map<String, dynamic>> list = await TaskHelper.getListTask(id);
+  
+  Future<void> getListTask(int id) async { // lấy danh sách task board của admin đó
+    List<Map<String, dynamic>> list = await IndexTaskHelper.getListTask(id);
     setState(() {
       taskList = list;
     });
   }
 
-  Future<int> getIdAdmin() async {
+  Future<int> getIdAdmin() async {  // lấy id của admin hiện tại đang đăng nhập
     pref = await SharedPreferences.getInstance();
     String? userData = pref.getString("userData");
     setState(() {
@@ -70,7 +72,7 @@ class ManageTaskState extends State {
     super.initState();
   }
 
-  void setValue(int id) {
+  void setValue(int id) { // set giá trị cho nút ấn checkbox, giá trị lấy từ bảng tasks cột status ( đã hoàn thành chưa ? )
     int i = 0;
     setState(() {
       while (i < dataList.length) {
@@ -84,17 +86,17 @@ class ManageTaskState extends State {
     });
   }
 
-  void updateStatus(String taskID, int status, String date) async {
+  void updateStatus(String taskID, String tcId, int status, String date) async { // cập nhật giá trị status lúc ấn nút checkbox
     try {
-      await TaskHelper.changeStatus(taskID, adminId, status, date);
+      await TaskHelper.changeStatus(taskID, tcId, status, date);
       print("update success");
     } catch (e) {
       print(e);
     }
   }
 
-  Future<void> getDataTask(int adId, String id) async {
-    List<Map<String, dynamic>> list = await TaskHelper.getTaskById(adId, id);
+  Future<void> getDataTask(String id) async {  // lấy danh sách task của bảng indexTask
+    List<Map<String, dynamic>> list = await TaskHelper.getListTask(id);
     setState(() {
       dataList = list;
     });
@@ -172,20 +174,20 @@ class ManageTaskState extends State {
                   ],
                 ),
               ),
-            Container(
-              color: Colors.blue,
-              child: Column(
-                children: [
-                  IconButton(
-                      icon: const Icon(Icons.more_vert_outlined),
-                      onPressed: () {
-                        setState(() {
-                          isOpen = !isOpen;
-                        });
-                      }),
-                ],
+              Container(
+                color: Colors.blue,
+                child: Column(
+                  children: [
+                    IconButton(
+                        icon: const Icon(Icons.more_vert_outlined),
+                        onPressed: () {
+                          setState(() {
+                            isOpen = !isOpen;
+                          });
+                        }),
+                  ],
+                ),
               ),
-            ),
             // Nội dung ở bên phải
             if (tabNumber == 1)
               Expanded(
@@ -359,7 +361,7 @@ class ManageTaskState extends State {
                           onTap: () {
                             setState(() {
                               tabChildNumber = i;
-                              getDataTask(adminId, taskList[i]['taskId'])
+                              getDataTask(taskList[i]['taskId'], )
                                   .then((value) {
                                 setValue(i);
                               });
@@ -380,7 +382,7 @@ class ManageTaskState extends State {
                         title: Column(
                           children: [
                             Text(
-                              dataList[index]['taskName'],
+                              dataList[index]['taskChildName'],
                               style: const TextStyle(color: Colors.black),
                             ),
                             Text(
@@ -399,11 +401,11 @@ class ManageTaskState extends State {
                               String date = DateTime.now().toString();
                               _checked[tabChildNumber][index] = value!;
                               print(_checked[tabChildNumber][index]);
-                              _checked[tabChildNumber][index]
-                                  ? updateStatus(
-                                      dataList[index]['taskId'], 1, date)
-                                  : updateStatus(
-                                      dataList[index]['taskId'], 0, "");
+                              // _checked[tabChildNumber][index]
+                              //     ? updateStatus(
+                              //         dataList[index]['taskId'], dataList[index]['taskChildId'],1, date)
+                              //     : updateStatus(
+                              //         dataList[index]['taskId'], dataList[index]['taskChildId'],0, "");
                             });
                           },
                         ),

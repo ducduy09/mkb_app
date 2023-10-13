@@ -114,24 +114,24 @@ class _InsertPrTableState extends State<InsertPrTable> {
 
   List<List<String>> excelData = [];
 
-  List<Map<String, dynamic>> convertToMapList(List<List<String>> inputList) {
-    // convert from list to listMap
-    List<Map<String, dynamic>> result = [];
-    for (int i = 1; i < inputList.length; i++) {
-      Map<String, dynamic> map = {
-        'productId': inputList[i][0],
-        'productName': inputList[i][1],
-        'productImage': inputList[i][2],
-        'quantity': int.parse(inputList[i][3].toString()),
-        'price': int.parse(inputList[i][4].toString()),
-        'sale': inputList[i][5].toString(),
-        'prSale': int.parse(inputList[i][6].toString()),
-        'quantityTemp': int.parse(inputList[i][7].toString()),
-      };
-      result.add(map);
-    }
-    return result;
-  }
+  // List<Map<String, dynamic>> convertToMapList(List<List<String>> inputList) {
+  //   // convert from list to listMap
+  //   List<Map<String, dynamic>> result = [];
+  //   for (int i = 1; i < inputList.length; i++) {
+  //     Map<String, dynamic> map = {
+  //       'productId': inputList[i][0],
+  //       'productName': inputList[i][1],
+  //       'productImage': inputList[i][2],
+  //       'quantity': int.parse(inputList[i][3].toString()),
+  //       'price': int.parse(inputList[i][4].toString()),
+  //       'sale': inputList[i][5].toString(),
+  //       'prSale': int.parse(inputList[i][6].toString()),
+  //       'quantityTemp': int.parse(inputList[i][7].toString()),
+  //     };
+  //     result.add(map);
+  //   }
+  //   return result;
+  // }
 
   void exportTemplate() async {
     Sheet sheetObject = excel['Sheet1'];
