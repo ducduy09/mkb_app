@@ -161,15 +161,9 @@ class _InsertAdminState extends State<InsertAdmin> {
     fToast.init(context);
   }
 
-  int idUS = 0;
-  void getLastID() async {
-    idUS = UserHelper.getId();
-    print(idUS);
-  }
-
   Widget _submitButton() {
     return InkWell(
-      onTap: () {
+      onTap: () async {
         if (checkUser(emailController.text)) {
           fToast.showToast(
             child: const Text("This account already exists"),
@@ -180,9 +174,13 @@ class _InsertAdminState extends State<InsertAdmin> {
           UserHelper.insertUser(nameController.text, emailController.text,
               passController.text, "Admin",
               level: 1);
-          getLastID();
+          List<Map<String, dynamic>> data = await UserHelper.getId();
+          int id = 0;
+          setState(() {
+            id = data[0]['userId'];
+          });
           DatabaseHelper.insertUser(
-              idUS,
+              id,
               avtController.text,
               nameController.text,
               int.parse(ageController.text),
