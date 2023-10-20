@@ -392,7 +392,7 @@ class ManageTaskState extends State {
                                   color: Color(0xFF797575),
                                   fontStyle: FontStyle.italic),
                             ),
-                          ],
+                          ], 
                         ),
                         leading: Checkbox(
                           value: _checked[tabChildNumber][index],
