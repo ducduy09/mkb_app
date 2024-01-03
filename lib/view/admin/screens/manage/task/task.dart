@@ -417,7 +417,7 @@ class ManageTaskState extends State {
           ],
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-        floatingActionButton: tabNumber == 2 ? MenuButtons() : null);
+        floatingActionButton: tabNumber == 2 ? MenuButtons() : SizedBox.shrink());
   }
 
   List<PieChartSectionData> showingSections() {
